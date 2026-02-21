@@ -9,8 +9,12 @@
             margin: 0; 
             padding: 0; 
             overflow: hidden; 
-            background: #000; 
             touch-action: manipulation;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
         }
         canvas { 
             position: fixed; 
@@ -18,6 +22,7 @@
             left: 0; 
             width: 100vw; 
             height: 100vh; 
+            display: block;
         }
         .ui-btn {
             position: fixed;
@@ -34,20 +39,17 @@
             z-index: 10;
             touch-action: manipulation;
         }
-        /* Botões de movimento */
         #btn-left { left: 25px; bottom: 25px; }
         #btn-right { left: 110px; bottom: 25px; }
         #btn-up { left: 67px; bottom: 95px; }
         #btn-down { left: 67px; bottom: 25px; }
-        /* Botões de ação */
         #btn-glove { right: 25px; bottom: 25px; }
-        #btn-item { right: 110px; bottom: 25px; }
+        #btn-item { right: 25px; bottom: 100px; }
     </style>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-// Configuração do jogo
 const game = new Phaser.Game({
     type: Phaser.CANVAS,
     width: window.innerWidth,
@@ -69,7 +71,7 @@ const game = new Phaser.Game({
             this.player = this.add.graphics();
             this.player.x = this.game.config.width/2;
             this.player.y = this.game.config.height/2;
-            this.drawPlayer = () => {
+            const drawPlayer = () => {
                 this.player.clear();
                 this.player.fillStyle(0x1e90ff);
                 this.player.fillCircle(0,0,40);
@@ -79,36 +81,22 @@ const game = new Phaser.Game({
                 this.player.fillRect(-10,-20,8,8);
                 this.player.fillRect(10,-20,8,8);
             };
-            this.drawPlayer();
+            drawPlayer();
 
-            // Controles dos botões
-            document.getElementById('btn-left').addEventListener('touchstart', () => {
-                this.player.x -= 8;
-                this.drawPlayer();
-            });
-            document.getElementById('btn-right').addEventListener('touchstart', () => {
-                this.player.x += 8;
-                this.drawPlayer();
-            });
-            document.getElementById('btn-up').addEventListener('touchstart', () => {
-                this.player.y -= 8;
-                this.drawPlayer();
-            });
-            document.getElementById('btn-down').addEventListener('touchstart', () => {
-                this.player.y += 8;
-                this.drawPlayer();
-            });
+            // Controles
+            document.getElementById('btn-left').addEventListener('touchstart', () => { this.player.x -= 8; drawPlayer(); });
+            document.getElementById('btn-right').addEventListener('touchstart', () => { this.player.x += 8; drawPlayer(); });
+            document.getElementById('btn-up').addEventListener('touchstart', () => { this.player.y -= 8; drawPlayer(); });
+            document.getElementById('btn-down').addEventListener('touchstart', () => { this.player.y += 8; drawPlayer(); });
             document.getElementById('btn-glove').addEventListener('touchstart', () => {
-                // Ação da luva SEM alert
                 this.player.fillStyle(0xff0000);
                 this.player.fillCircle(0,0,45);
-                setTimeout(() => this.drawPlayer(), 200);
+                setTimeout(drawPlayer, 200);
             });
             document.getElementById('btn-item').addEventListener('touchstart', () => {
-                // Ação do item SEM alert
                 this.player.fillStyle(0xffff00);
                 this.player.fillCircle(0,0,45);
-                setTimeout(() => this.drawPlayer(), 200);
+                setTimeout(drawPlayer, 200);
             });
         }
     }
