@@ -2,122 +2,108 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Graal-like Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, orientation=landscape">
+    <title>Graal-like Game - Modo Paisagem</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; touch-action: manipulation; }
-        canvas { width: 100vw; height: 100vh; }
-        .ui-button {
-            position: absolute;
-            width: 60px;
-            height: 60px;
+        body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #000; 
+            touch-action: manipulation;
+        }
+        canvas { 
+            width: 100vw; 
+            height: 100vh; 
+            display: block;
+        }
+        .ui-btn {
+            position: fixed;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            background: rgba(0,0,0,0.5);
-            border: 3px solid white;
+            background: rgba(0,0,0,0.7);
+            border: 3px solid #fff;
+            color: #fff;
+            font-size: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 20px;
-            touch-action: manipulation;
             z-index: 100;
+            touch-action: manipulation;
         }
-        .ui-button:active { background: rgba(255,255,255,0.5); }
-        #btn-left { bottom: 20px; left: 20px; }
-        #btn-right { bottom: 20px; left: 100px; }
-        #btn-up { bottom: 80px; left: 60px; }
-        #btn-down { bottom: 20px; left: 60px; }
-        #btn-glove { bottom: 20px; right: 20px; }
-        #btn-item { bottom: 100px; right: 20px; }
+        #btn-left { left: 20px; bottom: 20px; }
+        #btn-right { left: 110px; bottom: 20px; }
+        #btn-up { right: 110px; bottom: 20px; }
+        #btn-down { right: 20px; bottom: 20px; }
+        #btn-glove { right: 20px; top: 20px; }
+        #btn-item { right: 110px; top: 20px; }
     </style>
 </head>
 <body>
 <script>
 const config = {
     type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    physics: {
-        default: 'arcade',
-        arcade: { gravity: { y: 0 } }
+    width: 1920,
+    height: 1080,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        orientation: Phaser.Scale.LANDSCAPE
     },
+    physics: { default: 'arcade' },
     scene: { create: create }
 };
 
-const game = new Phaser.Game(config);
+let game;
+let player;
+let camera;
 
 function create() {
-    // Mapa de grama
-    const gfx = this.add.graphics();
-    const tileSize = 30;
-    for(let x=0; x<this.game.config.width; x+=tileSize) {
-        for(let y=0; y<this.game.config.height; y+=tileSize) {
-            gfx.fillStyle(0x28a038);
-            gfx.fillRect(x,y,tileSize,tileSize);
-            gfx.fillStyle(0x208028);
-            gfx.fillRect(x+3,y+3,6,6);
+    // Mapa
+    const tileGfx = this.add.graphics();
+    for(let x=0; x<60; x++){
+        for(let y=0; y<33; y++){
+            tileGfx.fillStyle(0x28a038);
+            tileGfx.fillRect(x*32, y*32, 32, 32);
         }
     }
 
     // Personagem
-    const player = this.add.graphics();
-    player.x = this.game.config.width/2;
-    player.y = this.game.config.height/2;
-    const playerSize = 60;
+    player = this.add.graphics();
+    player.fillStyle(0x1e90ff);
+    player.fillCircle(960, 540, 40);
+    player.fillStyle(0xffffff);
+    player.fillCircle(960, 540, 25);
+    player.fillStyle(0x000000);
+    player.fillRect(945, 535, 8, 8);
+    player.fillRect(975, 535, 8, 8);
 
-    // Desenhar personagem
-    const drawPlayer = () => {
-        player.clear();
-        // Corpo azul
-        player.fillStyle(0x1e90ff);
-        player.fillEllipse(playerSize/2, playerSize/2, playerSize, playerSize);
-        // Rosto
-        player.fillStyle(0xffffff);
-        player.fillEllipse(playerSize/2, playerSize/3, playerSize/2, playerSize/2);
-        // Olhos
-        player.fillStyle(0x000000);
-        player.fillRect(playerSize/3, playerSize/4, 8, 8);
-        player.fillRect(playerSize*2/3, playerSize/4, 8, 8);
-    };
-    drawPlayer();
+    // Câmera que segue o personagem
+    camera = this.cameras.main;
+    camera.startFollow(player);
+    camera.setBounds(0, 0, 1920, 1080);
 
-    // Movimento com teclado
-    this.input.keyboard.on('keydown', (e) => {
-        if(e.key === 'ArrowLeft') player.x -= 10;
-        if(e.key === 'ArrowRight') player.x += 10;
-        if(e.key === 'ArrowUp') player.y -= 10;
-        if(e.key === 'ArrowDown') player.y += 10;
-        drawPlayer();
-    });
-
-    // Botões de movimento para celular
-    const addBtn = (id, text, x, y, action) => {
-        const btn = document.createElement('div');
-        btn.id = id;
-        btn.className = 'ui-button';
-        btn.innerText = text;
-        btn.style.bottom = y + 'px';
-        btn.style.left = x + 'px';
-        btn.addEventListener('touchstart', action);
-        btn.addEventListener('mousedown', action);
-        document.body.appendChild(btn);
-    };
-
-    // Botões de movimento
-    addBtn('btn-left', '<', 20, 20, () => { player.x -= 10; drawPlayer(); });
-    addBtn('btn-right', '>', 100, 20, () => { player.x += 10; drawPlayer(); });
-    addBtn('btn-up', '^', 60, 80, () => { player.y -= 10; drawPlayer(); });
-    addBtn('btn-down', 'v', 60, 20, () => { player.y += 10; drawPlayer(); });
-
-    // Botões de luva e item
-    addBtn('btn-glove', '👊', window.innerWidth - 80, 20, () => {
-        alert('Ação da luva ativada!');
-    });
-    addBtn('btn-item', '💎', window.innerWidth - 80, 100, () => {
-        alert('Item usado!');
-    });
+    // Botões de ação
+    document.getElementById('btn-left').addEventListener('touchstart', () => player.x -= 10);
+    document.getElementById('btn-right').addEventListener('touchstart', () => player.x += 10);
+    document.getElementById('btn-up').addEventListener('touchstart', () => player.y -= 10);
+    document.getElementById('btn-down').addEventListener('touchstart', () => player.y += 10);
+    document.getElementById('btn-glove').addEventListener('touchstart', () => alert('Ação Luva!'));
+    document.getElementById('btn-item').addEventListener('touchstart', () => alert('Item usado!'));
 }
+
+game = new Phaser.Game(config);
 </script>
+
+<!-- Botões de controle -->
+<div class="ui-btn" id="btn-left"> ← </div>
+<div class="ui-btn" id="btn-right"> → </div>
+<div class="ui-btn" id="btn-up"> ↑ </div>
+<div class="ui-btn" id="btn-down"> ↓ </div>
+<div class="ui-btn" id="btn-glove"> 👊 </div>
+<div class="ui-btn" id="btn-item"> 💎 </div>
+
 </body>
 </html>
