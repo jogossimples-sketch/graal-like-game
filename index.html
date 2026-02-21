@@ -4,55 +4,58 @@
     <meta charset="UTF-8">
     <title>Graal-like Game</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
-    <style> body { margin: 0; background: #1a1a2e; } </style>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        canvas { width: 100vw; height: 100vh; }
+    </style>
 </head>
 <body>
 <script>
 let game = new Phaser.Game({
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 320,
+    height: 240,
+    zoom: 2, // Aumenta o tamanho dos elementos
     physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
-    scene: { preload: preload, create: create, update: update }
-});
+    scene: {
+        create: function() {
+            // Mapa maior
+            let gfx = this.add.graphics();
+            for (let x=0; x<10; x++) for (let y=0; y<8; y++) {
+                gfx.fillStyle(0x28a038);
+                gfx.fillRect(x*32, y*32, 32, 32);
+                gfx.fillStyle(0x208028);
+                gfx.fillRect(x*32+4, y*32+4, 4, 4);
+            }
 
-function preload() {}
-function create() {
-    // Desenhar mapa
-    let gfx = this.add.graphics();
-    for (let x=0; x<20; x++) for (let y=0; y<15; y++) {
-        gfx.fillStyle(0x28a038);
-        gfx.fillRect(x*32, y*32, 32, 32);
-        gfx.fillStyle(0x208028);
-        gfx.fillRect(x*32+4, y*32+4, 4, 4);
+            // Personagem maior e visível
+            let player = this.add.graphics();
+            player.x = 160;
+            player.y = 120;
+            this.input.keyboard.on('keydown', (e) => {
+                if (e.key === 'ArrowLeft') player.x -= 8;
+                if (e.key === 'ArrowRight') player.x += 8;
+                if (e.key === 'ArrowUp') player.y -= 8;
+                if (e.key === 'ArrowDown') player.y += 8;
+            });
+
+            this.updatePlayer = () => {
+                player.clear();
+                player.fillStyle(0x1e90ff);
+                player.fillEllipse(16, 24, 24, 32);
+                player.fillStyle(0xffffff);
+                player.fillEllipse(16, 18, 18, 18);
+                player.fillStyle(0x000000);
+                player.fillRect(12, 16, 4, 4);
+                player.fillRect(20, 16, 4, 4);
+            };
+
+            this.updatePlayer();
+            setInterval(() => this.updatePlayer(), 100);
+        }
     }
-
-    // Criar personagem
-    this.player = this.add.graphics();
-    this.player.x = 400;
-    this.player.y = 300;
-
-    // Controles
-    this.cursors = this.input.keyboard.createCursorKeys();
-}
-
-function update() {
-    // Movimento
-    if (this.cursors.left.isDown) this.player.x -= 5;
-    if (this.cursors.right.isDown) this.player.x += 5;
-    if (this.cursors.up.isDown) this.player.y -= 5;
-    if (this.cursors.down.isDown) this.player.y += 5;
-
-    // Desenhar personagem
-    this.player.clear();
-    this.player.fillStyle(0x1e90ff); // Corpo azul
-    this.player.fillEllipse(16, 24, 24, 32);
-    this.player.fillStyle(0xffffff); // Rosto
-    this.player.fillEllipse(16, 18, 18, 18);
-    this.player.fillStyle(0x000000); // Olhos
-    this.player.fillRect(10, 16, 4, 4);
-    this.player.fillRect(22, 16, 4, 4);
-}
+});
 </script>
 </body>
-</html>
+    </html>
+    
