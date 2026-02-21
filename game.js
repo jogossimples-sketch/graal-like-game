@@ -3,26 +3,46 @@ let player;
 let cursors;
 
 function preload() {
-    // Carregar assets (adicione os arquivos na pasta assets/sprites/)
-    this.load.spritesheet('player', 'assets/sprites/player.png', { frameWidth: 32, frameHeight: 48 });
-    this.load.image('mapTile', 'assets/sprites/grass_tile.png');
+    // NÃO PRECISA DE ARQUIVOS EXTERNOS!
 }
 
 function create() {
-    // Mapa básico
-    const map = this.make.tilemap({ width: 20, height: 15, tileWidth: 32, tileHeight: 32 });
-    const tileset = map.addTilesetImage('mapTile');
-    const layer = map.createLayer(0, tileset, 0, 0);
+    // Desenhar mapa de grama diretamente
+    this.graphics = this.add.graphics();
+    for (let x=0; x<20; x++) {
+        for (let y=0; y<15; y++) {
+            this.graphics.fillStyle(0x28a038); // Verde da grama
+            this.graphics.fillRect(x*32, y*32, 32, 32);
+            this.graphics.fillStyle(0x208028); // Detalhes mais escuros
+            this.graphics.fillRect(x*32 + 4, y*32 + 4, 4, 4);
+            this.graphics.fillRect(x*32 + 24, y*32 + 24, 4, 4);
+        }
+    }
 
-    // Personagem
-    player = this.physics.add.sprite(400, 300, 'player');
+    // Criar personagem diretamente (sem spritesheet)
+    player = this.physics.add.sprite(400, 300, null);
     player.setCollideWorldBounds(true);
+    player.displayWidth = 32;
+    player.displayHeight = 48;
 
-    // Animações
-    this.anims.create({ key: 'left', frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }), frameRate: 10, repeat: -1 });
-    this.anims.create({ key: 'right', frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }), frameRate: 10, repeat: -1 });
-    this.anims.create({ key: 'up', frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }), frameRate: 10, repeat: -1 });
-    this.anims.create({ key: 'down', frames: this.anims.generateFrameNumbers('player', { start: 12, end: 15 }), frameRate: 10, repeat: -1 });
+    // Desenhar personagem na tela
+    this.playerGraphics = this.add.graphics();
+    this.drawPlayer = () => {
+        this.playerGraphics.clear();
+        // Corpo azul
+        this.playerGraphics.fillStyle(0x1e90ff);
+        this.playerGraphics.fillEllipse(16, 24, 24, 32);
+        // Rosto branco
+        this.playerGraphics.fillStyle(0xffffff);
+        this.playerGraphics.fillEllipse(16, 18, 18, 18);
+        // Olhos pretos
+        this.playerGraphics.fillStyle(0x000000);
+        this.playerGraphics.fillEllipse(12, 16, 4, 4);
+        this.playerGraphics.fillEllipse(20, 16, 4, 4);
+        // Posicionar no player
+        this.playerGraphics.x = player.x - 16;
+        this.playerGraphics.y = player.y - 24;
+    };
 
     // Controles
     cursors = this.input.keyboard.createCursorKeys();
@@ -33,20 +53,26 @@ function update() {
     player.setVelocity(0);
     if (cursors.left.isDown) {
         player.setVelocityX(-160);
-        player.anims.play('left', true);
     } else if (cursors.right.isDown) {
         player.setVelocityX(160);
-        player.anims.play('right', true);
     } else if (cursors.up.isDown) {
         player.setVelocityY(-160);
-        player.anims.play('up', true);
     } else if (cursors.down.isDown) {
         player.setVelocityY(160);
-        player.anims.play('down', true);
-    } else {
-        player.anims.stop();
     }
+
+    // Redesenhar personagem
+    this.drawPlayer();
 }
 
-window.onload = () => { game = new Phaser.Game(config); };
-      
+// Inicializar jogo
+window.onload = () => {
+    game = new Phaser.Game({
+        type: Phaser.AUTO,
+        width: 800,
+        height: 600,
+        physics: { default: 'arcade' },
+        scene: { preload: preload, create: create, update: update }
+    });
+};
+                                   
