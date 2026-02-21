@@ -3,10 +3,8 @@ class Jogo:
         self.nome = nome
         self.personagens = []
         self.edificios = []
-
     def adicionar_personagem(self, personagem):
         self.personagens.append(personagem)
-
     def adicionar_edificio(self, edificio):
         self.edificios.append(edificio)
 
@@ -15,20 +13,16 @@ class Personagem:
         self.nome = nome
         self.tipo = tipo
         self.inventario = []
-
     def pegar_item(self, item):
         self.inventario.append(item)
 
-
-# PARTE NOVAdA ADICIONADA - NENHUMA ALTERAÇÃO NO CÓDIGO ACIMA!
-
+# PARTE NOVADA ADICIONADA - NENHUMA ALTERACAO NO CODIGO ACIMA!
 # Item: Picareta
 class Picareta:
     def __init__(self, tipo="padrão"):
         self.nome = "Picareta"
         self.tipo = tipo
         self.forca_mineracao = 5 if tipo == "padrão" else 10 if tipo == "ferro" else 15
-
     def __str__(self):
         return f"Picareta de {self.tipo} (Força: {self.forca_mineracao})"
 
@@ -39,7 +33,6 @@ class Mineiro(Personagem):
         self.nivel = nivel
         self.picaretas_disponiveis = [Picareta(), Picareta("ferro"), Picareta("diamante")]
         self.picareta_atual = self.picaretas_disponiveis[0]
-
     def trocar_picareta(self, tipo_picareta):
         for picareta in self.picaretas_disponiveis:
             if picareta.tipo == tipo_picareta:
@@ -47,26 +40,23 @@ class Mineiro(Personagem):
                 print(f"{self.nome} trocou para picareta de {tipo_picareta}!")
                 return
         print(f"Picareta de {tipo_picareta} não encontrada!")
-
     def minerar(self):
         print(f"{self.nome} está minerando com {self.picareta_atual}...")
         return self.picareta_atual.forca_mineracao * self.nivel
 
-# Edifício: Casa de Mineração
+# Edificio: Casa de Mineração
 class CasaMineracao:
     def __init__(self, nome="Casa de Mineração", localizacao="Montanha"):
         self.nome = nome
         self.localizacao = localizacao
         self.mineiros_atuantes = []
         self.recursos_minerados = 0
-
     def contratar_mineiro(self, mineiro):
         if mineiro.tipo == "Mineiro":
             self.mineiros_atuantes.append(mineiro)
             print(f"{mineiro.nome} foi contratado para trabalhar na {self.nome}!")
         else:
             print(f"{mineiro.nome} não é um mineiro, não pode trabalhar aqui!")
-
     def realizar_mineracao_coletiva(self):
         print(f"\n--- Mineração na {self.nome} ({self.localizacao}) ---")
         for mineiro in self.mineiros_atuantes:
@@ -74,24 +64,19 @@ class CasaMineracao:
             self.recursos_minerados += recursos
         print(f"Total de recursos minerados: {self.recursos_minerados}!\n")
 
-
-# EXEMPLO DE USO DA PARTE NOVAdA (opcional, pode remover se não quiser)
+# EXEMPLO DE USO DA PARTE NOVADA (opcional, pode remover se não quiser)
 if __name__ == "__main__":
-    jogo = Jogo("Meu Jogo com Mineração")
-    
+    jogo = Jogo("Meu Jogo com Mineracao")
     # Criar mineiros
     mineiro1 = Mineiro("João", nivel=2)
     mineiro2 = Mineiro("Maria", nivel=3)
     mineiro2.trocar_picareta("ferro")
-    
-    # Criar casa de mineração
+    # Criar casa de mineracao
     casa_mineracao = CasaMineracao(localizacao="Vale dos Minerais")
-    
     # Adicionar ao jogo
     jogo.adicionar_personagem(mineiro1)
     jogo.adicionar_personagem(mineiro2)
     jogo.adicionar_edificio(casa_mineracao)
-    
     # Contratar mineiros e minerar
     casa_mineracao.contratar_mineiro(mineiro1)
     casa_mineracao.contratar_mineiro(mineiro2)
