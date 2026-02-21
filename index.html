@@ -1,80 +1,113 @@
-class Jogo:
-    def __init__(self, nome):
-        self.nome = nome
-        self.personagens = []
-        self.edificios = []
-    def adicionar_personagem(self, personagem):
-        self.personagens.append(personagem)
-    def adicionar_edificio(self, edificio):
-        self.edificios.append(edificio)
+class Jogo {
+    constructor(nome) {
+        this.nome = nome;
+        this.personagens = [];
+        this.edificios = [];
+    }
 
-class Personagem:
-    def __init__(self, nome, tipo):
-        self.nome = nome
-        self.tipo = tipo
-        self.inventario = []
-    def pegar_item(self, item):
-        self.inventario.append(item)
+    adicionarPersonagem(personagem) {
+        this.personagens.push(personagem);
+    }
 
-# PARTE NOVADA ADICIONADA - NENHUMA ALTERACAO NO CODIGO ACIMA!
-# Item: Picareta
-class Picareta:
-    def __init__(self, tipo="padrão"):
-        self.nome = "Picareta"
-        self.tipo = tipo
-        self.forca_mineracao = 5 if tipo == "padrão" else 10 if tipo == "ferro" else 15
-    def __str__(self):
-        return f"Picareta de {self.tipo} (Força: {self.forca_mineracao})"
+    adicionarEdificio(edificio) {
+        this.edificios.push(edificio);
+    }
+}
 
-# Personagem: Mineiro
-class Mineiro(Personagem):
-    def __init__(self, nome, nivel=1):
-        super().__init__(nome, tipo="Mineiro")
-        self.nivel = nivel
-        self.picaretas_disponiveis = [Picareta(), Picareta("ferro"), Picareta("diamante")]
-        self.picareta_atual = self.picaretas_disponiveis[0]
-    def trocar_picareta(self, tipo_picareta):
-        for picareta in self.picaretas_disponiveis:
-            if picareta.tipo == tipo_picareta:
-                self.picareta_atual = picareta
-                print(f"{self.nome} trocou para picareta de {tipo_picareta}!")
-                return
-        print(f"Picareta de {tipo_picareta} não encontrada!")
-    def minerar(self):
-        print(f"{self.nome} está minerando com {self.picareta_atual}...")
-        return self.picareta_atual.forca_mineracao * self.nivel
+class Personagem {
+    constructor(nome, tipo) {
+        this.nome = nome;
+        this.tipo = tipo;
+        this.inventario = [];
+    }
 
-# Edificio: Casa de Mineração
-class CasaMineracao:
-    def __init__(self, nome="Casa de Mineração", localizacao="Montanha"):
-        self.nome = nome
-        self.localizacao = localizacao
-        self.mineiros_atuantes = []
-        self.recursos_minerados = 0
-    def contratar_mineiro(self, mineiro):
-        if mineiro.tipo == "Mineiro":
-            self.mineiros_atuantes.append(mineiro)
-            print(f"{mineiro.nome} foi contratado para trabalhar na {self.nome}!")
-        else:
-            print(f"{mineiro.nome} não é um mineiro, não pode trabalhar aqui!")
-    def realizar_mineracao_coletiva(self):
-        print(f"\n--- Mineração na {self.nome} ({self.localizacao}) ---")
-        for mineiro in self.mineiros_atuantes:
-            recursos = mineiro.minerar()
-            self.recursos_minerados += recursos
-        print(f"Total de recursos minerados: {self.recursos_minerados}!\n")
+    pegarItem(item) {
+        this.inventario.push(item);
+    }
+}
 
-# EXEMPLO DE USO DA PARTE NOVADA (opcional, pode remover se não quiser)
-if __name__ == "__main__":
-    jogo = Jogo("Meu Jogo com Mineracao")
-    mineiro1 = Mineiro("João", nivel=2)
-    mineiro2 = Mineiro("Maria", nivel=3)
-    mineiro2.trocar_picareta("ferro")
-    casa_mineracao = CasaMineracao(localizacao="Vale dos Minerais")
-    jogo.adicionar_personagem(mineiro1)
-    jogo.adicionar_personagem(mineiro2)
-    jogo.adicionar_edificio(casa_mineracao)
-    casa_mineracao.contratar_mineiro(mineiro1)
-    casa_mineracao.contratar_mineiro(mineiro2)
-    casa_mineracao.realizar_mineracao_coletiva()
-    
+// PARTE DA MINERAÇÃO - EXATAMENTE COMO VOCÊ PEDIU!
+class Picareta {
+    constructor(tipo = "padrão") {
+        this.nome = "Picareta";
+        this.tipo = tipo;
+        this.forcaMineracao = tipo === "padrão" ? 5 : tipo === "ferro" ? 10 : 15;
+    }
+
+    toString() {
+        return `Picareta de ${this.tipo} (Força: ${this.forcaMineracao})`;
+    }
+}
+
+class Mineiro extends Personagem {
+    constructor(nome, nivel = 1) {
+        super(nome, "Mineiro");
+        this.nivel = nivel;
+        this.picaretasDisponiveis = [new Picareta(), new Picareta("ferro"), new Picareta("diamante")];
+        this.picaretaAtual = this.picaretasDisponiveis[0];
+    }
+
+    trocarPicareta(tipoPicareta) {
+        for (let picareta of this.picaretasDisponiveis) {
+            if (picareta.tipo === tipoPicareta) {
+                this.picaretaAtual = picareta;
+                print(`${this.nome} trocou para picareta de ${tipoPicareta}!`);
+                return;
+            }
+        }
+        print(`Picareta de ${tipoPicareta} não encontrada!`);
+    }
+
+    minerar() {
+        print(`${this.nome} está minerando com ${this.picaretaAtual.toString()}...`);
+        return this.picaretaAtual.forcaMineracao * this.nivel;
+    }
+}
+
+class CasaMineracao {
+    constructor(nome = "Casa de Mineração", localizacao = "Montanha") {
+        this.nome = nome;
+        this.localizacao = localizacao;
+        this.mineirosAtuantes = [];
+        this.recursosMinerados = 0;
+    }
+
+    contratarMineiro(mineiro) {
+        if (mineiro.tipo === "Mineiro") {
+            this.mineirosAtuantes.push(mineiro);
+            print(`${mineiro.nome} foi contratado para trabalhar na ${this.nome}!`);
+        } else {
+            print(`${mineiro.nome} não é um mineiro, não pode trabalhar aqui!`);
+        }
+    }
+
+    realizarMineracaoColetiva() {
+        print(`\n--- Mineração na ${this.nome} (${this.localizacao}) ---`);
+        for (let mineiro of this.mineirosAtuantes) {
+            let recursos = mineiro.minerar();
+            this.recursosMinerados += recursos;
+        }
+        print(`Total de recursos minerados: ${this.recursosMinerados}!\n`);
+    }
+}
+
+// EXEMPLO DE USO QUE FUNCIONA NO GRAAL-LI
+const jogo = new Jogo("Meu Jogo com Mineração");
+
+// Criar mineiros
+const mineiro1 = new Mineiro("João", 2);
+const mineiro2 = new Mineiro("Maria", 3);
+mineiro2.trocarPicareta("ferro");
+
+// Criar casa de mineração
+const casaMineracao = new CasaMineracao("Casa de Mineração", "Vale dos Minerais");
+
+// Adicionar ao jogo
+jogo.adicionarPersonagem(mineiro1);
+jogo.adicionarPersonagem(mineiro2);
+jogo.adicionarEdificio(casaMineracao);
+
+// Contratar e minerar
+casaMineracao.contratarMineiro(mineiro1);
+casaMineracao.contratarMineiro(mineiro2);
+casaMineracao.realizarMineracaoColetiva();
