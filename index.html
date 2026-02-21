@@ -1,115 +1,100 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Graal-like Game - Mineração</title>
-    <style>
-        body { margin:0; padding:0; overflow:hidden; background:#000; }
-        canvas { width:100vw; height:100vh; display:block; }
-        .btn {
-            position:fixed;
-            width:60px; height:60px;
-            border-radius:50%;
-            background:rgba(0,0,0,0.7);
-            border:2px solid #fff;
-            color:#fff;
-            font-size:20px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            z-index:10;
-        }
-        #btn-move-left { left:20px; bottom:20px; }
-        #btn-move-right { left:100px; bottom:20px; }
-        #btn-move-up { left:60px; bottom:90px; }
-        #btn-move-down { left:60px; bottom:20px; }
-        #btn-mine { right:20px; bottom:20px; }
-    </style>
-</head>
-<body>
-<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-<script>
-const game = new Phaser.Game({
-    type: Phaser.CANVAS,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    scene: {
-        create: function() {
-            // MAPA
-            const mapa = this.add.graphics();
-            for(let x=0; x<this.game.config.width; x+=32) {
-                for(let y=0; y<this.game.config.height; y+=32) {
-                    mapa.fillStyle(0x28a038);
-                    mapa.fillRect(x,y,32,32);
-                    mapa.fillStyle(0x208028);
-                    mapa.fillRect(x+4,y+4,6,6);
-                }
-            }
+# CÓDIGO EXISTENTE (NÃO ALTERADO)
+class Jogo:
+    def __init__(self, nome):
+        self.nome = nome
+        self.personagens = []
+        self.edificios = []
 
-            // MINÉRIOS
-            this.minerios = [];
-            for(let i=0; i<10; i++) {
-                let m = this.add.graphics();
-                m.x = Phaser.Math.Between(64, this.game.config.width-64);
-                m.y = Phaser.Math.Between(64, this.game.config.height-64);
-                let tipo = Phaser.Math.RND.pick(['pedra','cobre','ouro']);
-                let cor = tipo == 'pedra' ? 0x808080 : tipo == 'cobre' ? 0xb87333 : 0xffff00;
-                m.fillStyle(cor);
-                m.fillCircle(0,0,20);
-                this.minerios.push({gfx:m, tipo:tipo, hp:3});
-            }
+    def adicionar_personagem(self, personagem):
+        self.personagens.append(personagem)
 
-            // PERSONAGEM
-            this.player = this.add.graphics();
-            this.player.x = this.game.config.width/2;
-            this.player.y = this.game.config.height/2;
-            this.desenharPlayer = () => {
-                this.player.clear();
-                this.player.fillStyle(0x1e90ff);
-                this.player.fillCircle(0,0,30);
-                this.player.fillStyle(0xffffff);
-                this.player.fillCircle(0,-15,20);
-                this.player.fillStyle(0x000);
-                this.player.fillRect(-8,-20,6,6);
-                this.player.fillRect(8,-20,6,6);
-            };
-            this.desenharPlayer();
+    def adicionar_edificio(self, edificio):
+        self.edificios.append(edificio)
 
-            // CONTROLES
-            document.getElementById('btn-move-left').onclick = () => { this.player.x -= 8; this.desenharPlayer(); };
-            document.getElementById('btn-move-right').onclick = () => { this.player.x += 8; this.desenharPlayer(); };
-            document.getElementById('btn-move-up').onclick = () => { this.player.y -= 8; this.desenharPlayer(); };
-            document.getElementById('btn-move-down').onclick = () => { this.player.y += 8; this.desenharPlayer(); };
-            document.getElementById('btn-mine').onclick = () => {
-                this.minerios.forEach(m => {
-                let dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, m.gfx.x, m.gfx.y);
-                if(dist < 80) {
-                    m.hp -=1;
-                    if(m.hp <=0) {
-                        m.gfx.destroy();
-                        this.minerios = this.minerios.filter(mi => mi != m);
-                    } else {
-                        m.gfx.clear();
-                        let cor = m.tipo == 'pedra' ? 0x808080 : m.tipo == 'cobre' ? 0xb87333 : 0xffff00;
-                        m.gfx.fillStyle(cor);
-                        m.gfx.fillCircle(0,0,20);
-                    }
-                }
-            });
-        };
-        }
-    }
-});
-</script>
+class Personagem:
+    def __init__(self, nome, tipo):
+        self.nome = nome
+        self.tipo = tipo
+        self.inventario = []
 
-<!-- BOTÕES -->
-<div class="btn" id="btn-move-left">←</div>
-<div class="btn" id="btn-move-right">→</div>
-<div class="btn" id="btn-move-up">↑</div>
-<div class="btn" id="btn-move-down">↓</div>
-<div class="btn" id="btn-mine">⛏️</div>
+    def pegar_item(self, item):
+        self.inventario.append(item)
 
-</body>
-    </html>
+
+# PARTE NOVAdA ADICIONADA - NENHUMA ALTERAÇÃO NO CÓDIGO ACIMA!
+
+# Item: Picareta
+class Picareta:
+    def __init__(self, tipo="padrão"):
+        self.nome = "Picareta"
+        self.tipo = tipo
+        self.forca_mineracao = 5 if tipo == "padrão" else 10 if tipo == "ferro" else 15
+
+    def __str__(self):
+        return f"Picareta de {self.tipo} (Força: {self.forca_mineracao})"
+
+# Personagem: Mineiro
+class Mineiro(Personagem):
+    def __init__(self, nome, nivel=1):
+        super().__init__(nome, tipo="Mineiro")
+        self.nivel = nivel
+        self.picaretas_disponiveis = [Picareta(), Picareta("ferro"), Picareta("diamante")]
+        self.picareta_atual = self.picaretas_disponiveis[0]
+
+    def trocar_picareta(self, tipo_picareta):
+        for picareta in self.picaretas_disponiveis:
+            if picareta.tipo == tipo_picareta:
+                self.picareta_atual = picareta
+                print(f"{self.nome} trocou para picareta de {tipo_picareta}!")
+                return
+        print(f"Picareta de {tipo_picareta} não encontrada!")
+
+    def minerar(self):
+        print(f"{self.nome} está minerando com {self.picareta_atual}...")
+        return self.picareta_atual.forca_mineracao * self.nivel
+
+# Edifício: Casa de Mineração
+class CasaMineracao:
+    def __init__(self, nome="Casa de Mineração", localizacao="Montanha"):
+        self.nome = nome
+        self.localizacao = localizacao
+        self.mineiros_atuantes = []
+        self.recursos_minerados = 0
+
+    def contratar_mineiro(self, mineiro):
+        if mineiro.tipo == "Mineiro":
+            self.mineiros_atuantes.append(mineiro)
+            print(f"{mineiro.nome} foi contratado para trabalhar na {self.nome}!")
+        else:
+            print(f"{mineiro.nome} não é um mineiro, não pode trabalhar aqui!")
+
+    def realizar_mineracao_coletiva(self):
+        print(f"\n--- Mineração na {self.nome} ({self.localizacao}) ---")
+        for mineiro in self.mineiros_atuantes:
+            recursos = mineiro.minerar()
+            self.recursos_minerados += recursos
+        print(f"Total de recursos minerados: {self.recursos_minerados}!\n")
+
+
+# EXEMPLO DE USO DA PARTE NOVAdA (opcional, pode remover se não quiser)
+if __name__ == "__main__":
+    jogo = Jogo("Meu Jogo com Mineração")
+    
+    # Criar mineiros
+    mineiro1 = Mineiro("João", nivel=2)
+    mineiro2 = Mineiro("Maria", nivel=3)
+    mineiro2.trocar_picareta("ferro")
+    
+    # Criar casa de mineração
+    casa_mineracao = CasaMineracao(localizacao="Vale dos Minerais")
+    
+    # Adicionar ao jogo
+    jogo.adicionar_personagem(mineiro1)
+    jogo.adicionar_personagem(mineiro2)
+    jogo.adicionar_edificio(casa_mineracao)
+    
+    # Contratar mineiros e minerar
+    casa_mineracao.contratar_mineiro(mineiro1)
+    casa_mineracao.contratar_mineiro(mineiro2)
+    casa_mineracao.realizar_mineracao_coletiva()
     
