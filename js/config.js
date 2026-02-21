@@ -4,7 +4,8 @@ const config = {
     height: 600,
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 0 } } // Sem gravidade, como no Graal
+        arcade: { gravity: { y: 0 } }
     },
-    scene: { preload: preload, create: create, update: update }
+    scene: { preload: preload, create: create, update: update },
+    pixelArt: true // Mantém os sprites nítidos
 };
