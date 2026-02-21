@@ -2,50 +2,29 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>Graal-like Game - Mina</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Graal-like Game - Mineração</title>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            touch-action: manipulation;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+        body { margin:0; padding:0; overflow:hidden; background:#000; }
+        canvas { width:100vw; height:100vh; display:block; }
+        .btn {
+            position:fixed;
+            width:60px; height:60px;
+            border-radius:50%;
+            background:rgba(0,0,0,0.7);
+            border:2px solid #fff;
+            color:#fff;
+            font-size:20px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:10;
         }
-        canvas { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100vw; 
-            height: 100vh; 
-            display: block;
-        }
-        .ui-btn {
-            position: fixed;
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            background: rgba(0,0,0,0.7);
-            border: 2px solid #fff;
-            color: #fff;
-            font-size: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            touch-action: manipulation;
-        }
-        #btn-move-left { left: 20px; bottom: 20px; }
-        #btn-move-right { left: 105px; bottom: 20px; }
-        #btn-move-up { left: 62px; bottom: 95px; }
-        #btn-move-down { left: 62px; bottom: 20px; }
-        #btn-mine { right: 20px; bottom: 20px; }
-        #btn-enter-mine { right: 20px; top: 20px; }
-        #btn-exit-mine { left: 20px; top: 20px; }
+        #btn-move-left { left:20px; bottom:20px; }
+        #btn-move-right { left:100px; bottom:20px; }
+        #btn-move-up { left:60px; bottom:90px; }
+        #btn-move-down { left:60px; bottom:20px; }
+        #btn-mine { right:20px; bottom:20px; }
     </style>
 </head>
 <body>
@@ -55,240 +34,81 @@ const game = new Phaser.Game({
     type: Phaser.CANVAS,
     width: window.innerWidth,
     height: window.innerHeight,
-    physics: { default: 'arcade' },
     scene: {
-        preload: preload,
-        create: create,
-        update: update
+        create: function() {
+            // MAPA
+            const mapa = this.add.graphics();
+            for(let x=0; x<this.game.config.width; x+=32) {
+                for(let y=0; y<this.game.config.height; y+=32) {
+                    mapa.fillStyle(0x28a038);
+                    mapa.fillRect(x,y,32,32);
+                    mapa.fillStyle(0x208028);
+                    mapa.fillRect(x+4,y+4,6,6);
+                }
+            }
+
+            // MINÉRIOS
+            this.minerios = [];
+            for(let i=0; i<10; i++) {
+                let m = this.add.graphics();
+                m.x = Phaser.Math.Between(64, this.game.config.width-64);
+                m.y = Phaser.Math.Between(64, this.game.config.height-64);
+                let tipo = Phaser.Math.RND.pick(['pedra','cobre','ouro']);
+                let cor = tipo == 'pedra' ? 0x808080 : tipo == 'cobre' ? 0xb87333 : 0xffff00;
+                m.fillStyle(cor);
+                m.fillCircle(0,0,20);
+                this.minerios.push({gfx:m, tipo:tipo, hp:3});
+            }
+
+            // PERSONAGEM
+            this.player = this.add.graphics();
+            this.player.x = this.game.config.width/2;
+            this.player.y = this.game.config.height/2;
+            this.desenharPlayer = () => {
+                this.player.clear();
+                this.player.fillStyle(0x1e90ff);
+                this.player.fillCircle(0,0,30);
+                this.player.fillStyle(0xffffff);
+                this.player.fillCircle(0,-15,20);
+                this.player.fillStyle(0x000);
+                this.player.fillRect(-8,-20,6,6);
+                this.player.fillRect(8,-20,6,6);
+            };
+            this.desenharPlayer();
+
+            // CONTROLES
+            document.getElementById('btn-move-left').onclick = () => { this.player.x -= 8; this.desenharPlayer(); };
+            document.getElementById('btn-move-right').onclick = () => { this.player.x += 8; this.desenharPlayer(); };
+            document.getElementById('btn-move-up').onclick = () => { this.player.y -= 8; this.desenharPlayer(); };
+            document.getElementById('btn-move-down').onclick = () => { this.player.y += 8; this.desenharPlayer(); };
+            document.getElementById('btn-mine').onclick = () => {
+                this.minerios.forEach(m => {
+                let dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, m.gfx.x, m.gfx.y);
+                if(dist < 80) {
+                    m.hp -=1;
+                    if(m.hp <=0) {
+                        m.gfx.destroy();
+                        this.minerios = this.minerios.filter(mi => mi != m);
+                    } else {
+                        m.gfx.clear();
+                        let cor = m.tipo == 'pedra' ? 0x808080 : m.tipo == 'cobre' ? 0xb87333 : 0xffff00;
+                        m.gfx.fillStyle(cor);
+                        m.gfx.fillCircle(0,0,20);
+                    }
+                }
+            });
+        };
+        }
     }
 });
-
-let player;
-let inMine = false;
-let pickaxeType = "wood"; // Picareta inicial: madeira
-let minerals = [];
-let hudText;
-
-// Tipos de minério e suas propriedades
-const MINERAL_TYPES = {
-    pedra: { color: 0x808080, hp: 2, drop: "pedra", pickaxeNeeded: "wood" },
-    cobre: { color: 0xb87333, hp: 3, drop: "cobre", pickaxeNeeded: "stone" },
-    ouro: { color: 0xffff00, hp: 5, drop: "ouro", pickaxeNeeded: "iron" },
-    diamante: { color: 0x00ffff, hp: 7, drop: "diamante", pickaxeNeeded: "diamond" }
-};
-
-// Tipos de picareta
-const PICKAXES = {
-    wood: { color: 0x8b4513 },
-    stone: { color: 0x808080 },
-    iron: { color: 0xa9a9a9 },
-    diamond: { color: 0x00ffff }
-};
-
-function preload() {
-    // Nenhum asset a carregar, tudo desenhado via código
-}
-
-function create() {
-    // Mapa externo (grama)
-    const grassGfx = this.add.graphics();
-    for(let x=0; x<this.game.config.width; x+=32) {
-        for(let y=0; y<this.game.config.height; y+=32) {
-            grassGfx.fillStyle(0x28a038);
-            grassGfx.fillRect(x, y, 32, 32);
-            grassGfx.fillStyle(0x208028);
-            grassGfx.fillRect(x+4, y+4, 6, 6);
-        }
-    }
-
-    // Área da mina (inicialmente invisível)
-    this.mineGfx = this.add.graphics();
-    this.mineGfx.visible = false;
-
-    // Personagem
-    player = this.physics.add.graphics();
-    player.x = this.game.config.width/2;
-    player.y = this.game.config.height/2;
-    drawPlayer();
-
-    // Texto HUD
-    hudText = this.add.text(10, 10, "", { color: "#fff", fontSize: 16 });
-    updateHud();
-
-    // Botões de controle
-    document.getElementById('btn-move-left').addEventListener('touchstart', () => {
-        player.x -= 8;
-        if(!inMine) checkMineEnter();
-    });
-    document.getElementById('btn-move-right').addEventListener('touchstart', () => {
-        player.x += 8;
-        if(!inMine) checkMineEnter();
-    });
-    document.getElementById('btn-move-up').addEventListener('touchstart', () => {
-        player.y -= 8;
-        if(!inMine) checkMineEnter();
-    });
-    document.getElementById('btn-move-down').addEventListener('touchstart', () => {
-        player.y += 8;
-        if(!inMine) checkMineEnter();
-    });
-
-    // Botão minerar
-    document.getElementById('btn-mine').addEventListener('touchstart', () => {
-        if(inMine) mineMineral(this);
-    });
-
-    // Botão entrar/sair da mina
-    document.getElementById('btn-enter-mine').addEventListener('touchstart', () => {
-        if(!inMine) enterMine(this);
-        else exitMine(this);
-    });
-    document.getElementById('btn-exit-mine').addEventListener('touchstart', () => {
-        if(inMine) exitMine(this);
-    });
-
-    // Gerar minérios na mina
-    generateMinerals(this);
-}
-
-function update() {
-    drawPlayer();
-    updateHud();
-}
-
-// Funções do sistema de mina
-function checkMineEnter() {
-    // Área de entrada da mina (canto superior direito do mapa externo)
-    if(player.x > game.config.width - 100 && player.y < 100) {
-        enterMine(game.scene.scenes[0]);
-    }
-}
-
-function enterMine(scene) {
-    inMine = true;
-    scene.mineGfx.visible = true;
-    scene.mineGfx.clear();
-    
-    // Desenhar paredes da mina
-    scene.mineGfx.fillStyle(0x3a3a3a);
-    scene.mineGfx.fillRect(0, 0, game.config.width, game.config.height);
-    scene.mineGfx.fillStyle(0x505050);
-    for(let x=32; x<game.config.width-32; x+=32) {
-        for(let y=32; y<game.config.height-32; y+=32) {
-            scene.mineGfx.fillRect(x, y, 6, 6);
-        }
-    }
-
-    // Atualizar HUD
-    hudText.setText("Dentro da Mina!");
-}
-
-function exitMine(scene) {
-    inMine = false;
-    scene.mineGfx.visible = false;
-    player.x = game.config.width/2;
-    player.y = game.config.height/2;
-    hudText.setText("Fora da Mina!");
-}
-
-function generateMinerals(scene) {
-    // Gerar minérios variados na mina
-    for(let i=0; i<15; i++) {
-        const mineral = {
-            x: Phaser.Math.Between(64, game.config.width - 64),
-            y: Phaser.Math.Between(64, game.config.height - 64),
-            type: Phaser.Math.RND.pick(["pedra", "cobre", "ouro", "diamante"]),
-            hp: MINERAL_TYPES[Phaser.Math.RND.pick(["pedra", "cobre", "ouro", "diamante"])].hp
-        };
-        minerals.push(mineral);
-        drawMineral(scene, mineral);
-    }
-}
-
-function drawMineral(scene, mineral) {
-    const gfx = scene.add.graphics();
-    gfx.x = mineral.x;
-    gfx.y = mineral.y;
-    gfx.fillStyle(MINERAL_TYPES[mineral.type].color);
-    gfx.fillCircle(0, 0, 20);
-    mineral.gfx = gfx;
-}
-
-function mineMineral(scene) {
-    // Encontrar minério próximo
-    for(let mineral of minerals) {
-        const dist = Phaser.Math.Distance.Between(player.x, player.y, mineral.x, mineral.y);
-        if(dist < 80) {
-            // Verificar se picareta é suficiente
-            if(pickaxeType >= MINERAL_TYPES[mineral.type].pickaxeNeeded) {
-                mineral.hp -= 1;
-                if(mineral.hp <= 0) {
-                    mineral.gfx.destroy();
-                    minerals = minerals.filter(m => m !== mineral);
-                    hudText.setText(`Coletou ${mineral.type}!`);
-                } else {
-                    // Efeito de impacto
-                    mineral.gfx.clear();
-                    mineral.gfx.fillStyle(0xff0000);
-                    mineral.gfx.fillCircle(0, 0, 20);
-                    setTimeout(() => {
-                        mineral.gfx.clear();
-                        mineral.gfx.fillStyle(MINERAL_TYPES[mineral.type].color);
-                        mineral.gfx.fillCircle(0, 0, 20);
-                    }, 200);
-                }
-            } else {
-                hudText.setText(`Precisa de picareta de ${MINERAL_TYPES[mineral.type].pickaxeNeeded}!`);
-            }
-            break;
-        }
-    }
-}
-
-// Funções do personagem
-function drawPlayer() {
-    player.clear();
-    // Corpo do jogador
-    player.fillStyle(0x1e90ff);
-    player.fillCircle(0, 0, 30);
-    // Rosto
-    player.fillStyle(0xffffff);
-    player.fillCircle(0, -10, 20);
-    // Olhos
-    player.fillStyle(0x000000);
-    player.fillRect(-8, -15, 6, 6);
-    player.fillRect(8, -15, 6, 6);
-    // Picareta na mão
-    player.fillStyle(PICKAXES[pickaxeType].color);
-    player.fillRect(20, 0, 15, 5);
-    player.fillRect(30, -5, 5, 15);
-}
-
-function updateHud() {
-    hudText.setText(inMine ? "Mina - Picareta: " + pickaxeType : "Mapa - Clique para entrar na Mina");
-}
-
-function updateHud() {
-    if(hudText) {
-        let text = "";
-        if(inMine) {
-            text = `Mina | Picareta: ${pickaxeType} | Minérios restantes: ${minerals.length}`;
-        } else {
-            text = `Mapa | Caminhe até a entrada da Mina (canto superior direito)`;
-        }
-        hudText.setText(text);
-    }
-}
 </script>
 
-<!-- Botões de controle -->
-<div class="ui-btn" id="btn-move-left">←</div>
-<div class="ui-btn" id="btn-move-right">→</div>
-<div class="ui-btn" id="btn-move-up">↑</div>
-<div class="ui-btn" id="btn-move-down">↓</div>
-<div class="ui-btn" id="btn-mine">⛏️</div>
-<div class="ui-btn" id="btn-enter-mine">⛰️ Entrar/Sair</div>
-<div class="ui-btn" id="btn-exit-mine">🚪 Sair</div>
+<!-- BOTÕES -->
+<div class="btn" id="btn-move-left">←</div>
+<div class="btn" id="btn-move-right">→</div>
+<div class="btn" id="btn-move-up">↑</div>
+<div class="btn" id="btn-move-down">↓</div>
+<div class="btn" id="btn-mine">⛏️</div>
 
 </body>
     </html>
