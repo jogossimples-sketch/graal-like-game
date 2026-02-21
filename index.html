@@ -2,55 +2,123 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Graal-like Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Graal-like Game - Modo Paisagem</title>
     <style>
-        body { margin:0; padding:0; overflow:hidden; background:#000; }
-        canvas { position:fixed; top:0; left:0; width:100vw; height:100vh; }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: #000; 
+            touch-action: manipulation;
+        }
+        canvas { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+        }
+        .ui-btn {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid white;
+            color: white;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            touch-action: manipulation;
+        }
+        /* Botões de movimento */
+        #btn-left { left: 20px; bottom: 20px; }
+        #btn-right { left: 100px; bottom: 20px; }
+        #btn-up { left: 60px; bottom: 80px; }
+        #btn-down { left: 60px; bottom: 20px; }
+        /* Botões de ação */
+        #btn-glove { right: 20px; bottom: 20px; }
+        #btn-item { right: 100px; bottom: 20px; }
     </style>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-// Jogo simples sem bugs
+// Configuração do jogo
 const game = new Phaser.Game({
     type: Phaser.CANVAS,
     width: window.innerWidth,
     height: window.innerHeight,
     scene: {
         create: function() {
-            // Mapa
+            // Mapa de grama
             const gfx = this.add.graphics();
             for(let x=0; x<this.game.config.width; x+=32) {
                 for(let y=0; y<this.game.config.height; y+=32) {
                     gfx.fillStyle(0x28a038);
-                    gfx.fillRect(x,y,32,32);
+                    gfx.fillRect(x, y, 32, 32);
                     gfx.fillStyle(0x208028);
-                    gfx.fillRect(x+4,y+4,6,6);
+                    gfx.fillRect(x+4, y+4, 6, 6);
                 }
             }
 
-            // Personagem fixo na tela
+            // Personagem
             this.player = this.add.graphics();
             this.player.x = this.game.config.width/2;
             this.player.y = this.game.config.height/2;
+
+            // Função para desenhar personagem
             this.drawPlayer = () => {
                 this.player.clear();
                 this.player.fillStyle(0x1e90ff);
-                this.player.fillCircle(0,0,40);
+                this.player.fillCircle(0, 0, 40);
                 this.player.fillStyle(0xffffff);
-                this.player.fillCircle(0,-15,25);
+                this.player.fillCircle(0, -15, 25);
                 this.player.fillStyle(0x000000);
-                this.player.fillRect(-10,-20,8,8);
-                this.player.fillRect(10,-20,8,8);
+                this.player.fillRect(-10, -20, 8, 8);
+                this.player.fillRect(10, -20, 8, 8);
             };
             this.drawPlayer();
 
-            // Não fecha mais!
-            setInterval(() => this.drawPlayer(), 100);
+            // Controles dos botões
+            document.getElementById('btn-left').addEventListener('touchstart', () => {
+                this.player.x -= 8;
+                this.drawPlayer();
+            });
+            document.getElementById('btn-right').addEventListener('touchstart', () => {
+                this.player.x += 8;
+                this.drawPlayer();
+            });
+            document.getElementById('btn-up').addEventListener('touchstart', () => {
+                this.player.y -= 8;
+                this.drawPlayer();
+            });
+            document.getElementById('btn-down').addEventListener('touchstart', () => {
+                this.player.y += 8;
+                this.drawPlayer();
+            });
+            document.getElementById('btn-glove').addEventListener('touchstart', () => {
+                alert('Ação da luva ativada!');
+            });
+            document.getElementById('btn-item').addEventListener('touchstart', () => {
+                alert('Item usado com sucesso!');
+            });
         }
     }
 });
 </script>
+
+<!-- Botões de controle -->
+<div class="ui-btn" id="btn-left">←</div>
+<div class="ui-btn" id="btn-right">→</div>
+<div class="ui-btn" id="btn-up">↑</div>
+<div class="ui-btn" id="btn-down">↓</div>
+<div class="ui-btn" id="btn-glove">👊</div>
+<div class="ui-btn" id="btn-item">💎</div>
+
 </body>
-</html>
+    </html>
+    
