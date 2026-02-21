@@ -6,8 +6,30 @@
     <title>Graal-like Game</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
     <style>
-        body { margin: 0; padding: 0; background: #000; }
-        canvas { width: 100% !important; height: auto !important; }
+        body { margin: 0; padding: 0; overflow: hidden; touch-action: manipulation; }
+        canvas { width: 100vw; height: 100vh; }
+        .ui-button {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.5);
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            touch-action: manipulation;
+            z-index: 100;
+        }
+        .ui-button:active { background: rgba(255,255,255,0.5); }
+        #btn-left { bottom: 20px; left: 20px; }
+        #btn-right { bottom: 20px; left: 100px; }
+        #btn-up { bottom: 80px; left: 60px; }
+        #btn-down { bottom: 20px; left: 60px; }
+        #btn-glove { bottom: 20px; right: 20px; }
+        #btn-item { bottom: 100px; right: 20px; }
     </style>
 </head>
 <body>
@@ -16,53 +38,85 @@ const config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
+    physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 0 } }
+    },
     scene: { create: create }
 };
 
 const game = new Phaser.Game(config);
 
 function create() {
-    // Mapa de grama que ocupa toda a tela
+    // Mapa de grama
     const gfx = this.add.graphics();
     const tileSize = 30;
-    for (let x=0; x<this.game.config.width; x+=tileSize) {
-        for (let y=0; y<this.game.config.height; y+=tileSize) {
+    for(let x=0; x<this.game.config.width; x+=tileSize) {
+        for(let y=0; y<this.game.config.height; y+=tileSize) {
             gfx.fillStyle(0x28a038);
-            gfx.fillRect(x, y, tileSize, tileSize);
+            gfx.fillRect(x,y,tileSize,tileSize);
             gfx.fillStyle(0x208028);
-            gfx.fillRect(x+3, y+3, 6, 6);
+            gfx.fillRect(x+3,y+3,6,6);
         }
     }
 
-    // Personagem maior e visível
+    // Personagem
     const player = this.add.graphics();
-    player.x = this.game.config.width / 2;
-    player.y = this.game.config.height / 2;
+    player.x = this.game.config.width/2;
+    player.y = this.game.config.height/2;
     const playerSize = 60;
-
-    // Movimento com setas
-    this.input.keyboard.on('keydown', (e) => {
-        if (e.key === 'ArrowLeft') player.x -= 10;
-        if (e.key === 'ArrowRight') player.x += 10;
-        if (e.key === 'ArrowUp') player.y -= 10;
-        if (e.key === 'ArrowDown') player.y += 10;
-    });
 
     // Desenhar personagem
     const drawPlayer = () => {
         player.clear();
-        player.fillStyle(0x1e90ff); // Azul
+        // Corpo azul
+        player.fillStyle(0x1e90ff);
         player.fillEllipse(playerSize/2, playerSize/2, playerSize, playerSize);
-        player.fillStyle(0xffffff); // Rosto
+        // Rosto
+        player.fillStyle(0xffffff);
         player.fillEllipse(playerSize/2, playerSize/3, playerSize/2, playerSize/2);
-        player.fillStyle(0x000000); // Olhos
+        // Olhos
+        player.fillStyle(0x000000);
         player.fillRect(playerSize/3, playerSize/4, 8, 8);
         player.fillRect(playerSize*2/3, playerSize/4, 8, 8);
     };
-
     drawPlayer();
-    setInterval(drawPlayer, 50);
+
+    // Movimento com teclado
+    this.input.keyboard.on('keydown', (e) => {
+        if(e.key === 'ArrowLeft') player.x -= 10;
+        if(e.key === 'ArrowRight') player.x += 10;
+        if(e.key === 'ArrowUp') player.y -= 10;
+        if(e.key === 'ArrowDown') player.y += 10;
+        drawPlayer();
+    });
+
+    // Botões de movimento para celular
+    const addBtn = (id, text, x, y, action) => {
+        const btn = document.createElement('div');
+        btn.id = id;
+        btn.className = 'ui-button';
+        btn.innerText = text;
+        btn.style.bottom = y + 'px';
+        btn.style.left = x + 'px';
+        btn.addEventListener('touchstart', action);
+        btn.addEventListener('mousedown', action);
+        document.body.appendChild(btn);
+    };
+
+    // Botões de movimento
+    addBtn('btn-left', '<', 20, 20, () => { player.x -= 10; drawPlayer(); });
+    addBtn('btn-right', '>', 100, 20, () => { player.x += 10; drawPlayer(); });
+    addBtn('btn-up', '^', 60, 80, () => { player.y -= 10; drawPlayer(); });
+    addBtn('btn-down', 'v', 60, 20, () => { player.y += 10; drawPlayer(); });
+
+    // Botões de luva e item
+    addBtn('btn-glove', '👊', window.innerWidth - 80, 20, () => {
+        alert('Ação da luva ativada!');
+    });
+    addBtn('btn-item', '💎', window.innerWidth - 80, 100, () => {
+        alert('Item usado!');
+    });
 }
 </script>
 </body>
