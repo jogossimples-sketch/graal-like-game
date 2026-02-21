@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>Graal-like Game - Modo Paisagem</title>
+    <title>Graal-like Game - Mineração</title>
     <style>
         body { 
             margin: 0; 
@@ -45,6 +45,18 @@
         #btn-down { left: 67px; bottom: 25px; }
         #btn-glove { right: 25px; bottom: 25px; }
         #btn-item { right: 25px; bottom: 100px; }
+        #btn-pickaxe { right: 25px; top: 25px; } /* Botão da picareta */
+        .ui-hud {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border: 2px solid #fff;
+            color: #fff;
+            font-size: 18px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -56,8 +68,22 @@ const game = new Phaser.Game({
     height: window.innerHeight,
     scene: {
         create: function() {
-            // Mapa
+            // === HUD DE RECURSOS ===
+            this.resources = {
+                pedra: 0,
+                ouro: 0
+            };
+            this.hud = document.createElement('div');
+            this.hud.className = 'ui-hud';
+            this.updateHud = () => {
+                this.hud.innerHTML = `🏔️ Pedra: ${this.resources.pedra}<br>💰 Ouro: ${this.resources.ouro}`;
+            };
+            this.hud.innerHTML = `🏔️ Pedra: 0<br>💰 Ouro: 0`;
+            document.body.appendChild(this.hud);
+
+            // === MAPA ===
             const gfx = this.add.graphics();
+            // Grama
             for(let x=0; x<this.game.config.width; x+=32) {
                 for(let y=0; y<this.game.config.height; y+=32) {
                     gfx.fillStyle(0x28a038);
@@ -66,8 +92,28 @@ const game = new Phaser.Game({
                     gfx.fillRect(x+4,y+4,6,6);
                 }
             }
+            // Pedras para mineração (aleatórias no mapa)
+            this.rocks = [];
+            for(let i=0; i<10; i++) {
+                const rock = this.add.graphics();
+                const x = Phaser.Math.Between(64, this.game.config.width - 64);
+                const y = Phaser.Math.Between(64, this.game.config.height - 64);
+                rock.x = x;
+                rock.y = y;
+                // Desenhar pedra
+                rock.fillStyle(0x808080);
+                rock.fillCircle(0,0,30);
+                rock.fillStyle(0x696969);
+                rock.fillCircle(-10,-10,10);
+                rock.fillCircle(15,5,8);
+                this.rocks.push({
+                    gfx: rock,
+                    vida: 3, // Precisa 3 golpes para minerar
+                    tipo: Phaser.Math.Between(0, 1) // 0=pedra, 1=ouro
+                });
+            }
 
-            // Personagem
+            // === PERSONAGEM ===
             this.player = this.add.graphics();
             this.player.x = this.game.config.width/2;
             this.player.y = this.game.config.height/2;
@@ -83,11 +129,13 @@ const game = new Phaser.Game({
             };
             drawPlayer();
 
-            // Controles
+            // === CONTROLES ===
+            // Movimento
             document.getElementById('btn-left').addEventListener('touchstart', () => { this.player.x -= 8; drawPlayer(); });
             document.getElementById('btn-right').addEventListener('touchstart', () => { this.player.x += 8; drawPlayer(); });
             document.getElementById('btn-up').addEventListener('touchstart', () => { this.player.y -= 8; drawPlayer(); });
             document.getElementById('btn-down').addEventListener('touchstart', () => { this.player.y += 8; drawPlayer(); });
+            // Ações
             document.getElementById('btn-glove').addEventListener('touchstart', () => {
                 this.player.fillStyle(0xff0000);
                 this.player.fillCircle(0,0,45);
@@ -97,6 +145,61 @@ const game = new Phaser.Game({
                 this.player.fillStyle(0xffff00);
                 this.player.fillCircle(0,0,45);
                 setTimeout(drawPlayer, 200);
+            });
+            // Mineração com picareta
+            document.getElementById('btn-pickaxe').addEventListener('touchstart', () => {
+                // Verificar se tem pedra perto
+                this.rocks.forEach((rock, idx) => {
+                    const dist = Phaser.Math.Distance.Between(
+                        this.player.x, this.player.y,
+                        rock.gfx.x, rock.gfx.y
+                    );
+                    if(dist < 80) { // Se estiver perto o suficiente
+                        rock.vida -= 1;
+                        // Efeito visual na pedra
+                        rock.gfx.clear();
+                        rock.gfx.fillStyle(0xffa500);
+                        rock.gfx.fillCircle(0,0,30);
+                        setTimeout(() => {
+                            rock.gfx.clear();
+                            rock.gfx.fillStyle(0x808080);
+                            rock.gfx.fillCircle(0,0,30);
+                            rock.gfx.fillStyle(0x696969);
+                            rock.gfx.fillCircle(-10,-10,10);
+                            rock.gfx.fillCircle(15,5,8);
+                        }, 200);
+                        // Se destruiu a pedra
+                        if(rock.vida <= 0) {
+                            rock.gfx.destroy();
+                            this.rocks.splice(idx, 1);
+                            // Dar recompensa
+                            if(rock.tipo === 0) {
+                                this.resources.pedra += 1;
+                            } else {
+                                this.resources.ouro += 1;
+                            }
+                            this.updateHud();
+                            // Criar nova pedra depois de tempo
+                            setTimeout(() => {
+                                const newRock = this.add.graphics();
+                                const x = Phaser.Math.Between(64, this.game.config.width - 64);
+                                const y = Phaser.Math.Between(64, this.game.config.height - 64);
+                                newRock.x = x;
+                                newRock.y = y;
+                                newRock.fillStyle(0x808080);
+                                newRock.fillCircle(0,0,30);
+                                newRock.fillStyle(0x696969);
+                                newRock.fillCircle(-10,-10,10);
+                                newRock.fillCircle(15,5,8);
+                                this.rocks.push({
+                                    gfx: newRock,
+                                    vida: 3,
+                                    tipo: Phaser.Math.Between(0,1)
+                                });
+                            }, 5000);
+                        }
+                    }
+                });
             });
         }
     }
@@ -110,6 +213,7 @@ const game = new Phaser.Game({
 <div class="ui-btn" id="btn-down">↓</div>
 <div class="ui-btn" id="btn-glove">👊</div>
 <div class="ui-btn" id="btn-item">💎</div>
+<div class="ui-btn" id="btn-pickaxe">⛏️</div> <!-- Botão da picareta -->
 
 </body>
 </html>
