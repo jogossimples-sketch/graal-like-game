@@ -4,10 +4,55 @@
     <meta charset="UTF-8">
     <title>Graal-like Game</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/game.js"></script>
-    <style> body { margin: 0; } </style>
+    <style> body { margin: 0; background: #1a1a2e; } </style>
 </head>
-<body></body>
-  </html>
-    
+<body>
+<script>
+let game = new Phaser.Game({
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
+    scene: { preload: preload, create: create, update: update }
+});
+
+function preload() {}
+function create() {
+    // Desenhar mapa
+    let gfx = this.add.graphics();
+    for (let x=0; x<20; x++) for (let y=0; y<15; y++) {
+        gfx.fillStyle(0x28a038);
+        gfx.fillRect(x*32, y*32, 32, 32);
+        gfx.fillStyle(0x208028);
+        gfx.fillRect(x*32+4, y*32+4, 4, 4);
+    }
+
+    // Criar personagem
+    this.player = this.add.graphics();
+    this.player.x = 400;
+    this.player.y = 300;
+
+    // Controles
+    this.cursors = this.input.keyboard.createCursorKeys();
+}
+
+function update() {
+    // Movimento
+    if (this.cursors.left.isDown) this.player.x -= 5;
+    if (this.cursors.right.isDown) this.player.x += 5;
+    if (this.cursors.up.isDown) this.player.y -= 5;
+    if (this.cursors.down.isDown) this.player.y += 5;
+
+    // Desenhar personagem
+    this.player.clear();
+    this.player.fillStyle(0x1e90ff); // Corpo azul
+    this.player.fillEllipse(16, 24, 24, 32);
+    this.player.fillStyle(0xffffff); // Rosto
+    this.player.fillEllipse(16, 18, 18, 18);
+    this.player.fillStyle(0x000000); // Olhos
+    this.player.fillRect(10, 16, 4, 4);
+    this.player.fillRect(22, 16, 4, 4);
+}
+</script>
+</body>
+</html>
