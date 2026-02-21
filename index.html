@@ -67,17 +67,13 @@ class CasaMineracao:
 # EXEMPLO DE USO DA PARTE NOVADA (opcional, pode remover se não quiser)
 if __name__ == "__main__":
     jogo = Jogo("Meu Jogo com Mineracao")
-    # Criar mineiros
     mineiro1 = Mineiro("João", nivel=2)
     mineiro2 = Mineiro("Maria", nivel=3)
     mineiro2.trocar_picareta("ferro")
-    # Criar casa de mineracao
     casa_mineracao = CasaMineracao(localizacao="Vale dos Minerais")
-    # Adicionar ao jogo
     jogo.adicionar_personagem(mineiro1)
     jogo.adicionar_personagem(mineiro2)
     jogo.adicionar_edificio(casa_mineracao)
-    # Contratar mineiros e minerar
     casa_mineracao.contratar_mineiro(mineiro1)
     casa_mineracao.contratar_mineiro(mineiro2)
     casa_mineracao.realizar_mineracao_coletiva()
