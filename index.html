@@ -2,108 +2,55 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, orientation=landscape">
-    <title>Graal-like Game - Modo Paisagem</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Graal-like Game</title>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            background: #000; 
-            touch-action: manipulation;
-        }
-        canvas { 
-            width: 100vw; 
-            height: 100vh; 
-            display: block;
-        }
-        .ui-btn {
-            position: fixed;
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: rgba(0,0,0,0.7);
-            border: 3px solid #fff;
-            color: #fff;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            touch-action: manipulation;
-        }
-        #btn-left { left: 20px; bottom: 20px; }
-        #btn-right { left: 110px; bottom: 20px; }
-        #btn-up { right: 110px; bottom: 20px; }
-        #btn-down { right: 20px; bottom: 20px; }
-        #btn-glove { right: 20px; top: 20px; }
-        #btn-item { right: 110px; top: 20px; }
+        body { margin:0; padding:0; overflow:hidden; background:#000; }
+        canvas { position:fixed; top:0; left:0; width:100vw; height:100vh; }
     </style>
 </head>
 <body>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-const config = {
-    type: Phaser.AUTO,
-    width: 1920,
-    height: 1080,
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        orientation: Phaser.Scale.LANDSCAPE
-    },
-    physics: { default: 'arcade' },
-    scene: { create: create }
-};
+// Jogo simples sem bugs
+const game = new Phaser.Game({
+    type: Phaser.CANVAS,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    scene: {
+        create: function() {
+            // Mapa
+            const gfx = this.add.graphics();
+            for(let x=0; x<this.game.config.width; x+=32) {
+                for(let y=0; y<this.game.config.height; y+=32) {
+                    gfx.fillStyle(0x28a038);
+                    gfx.fillRect(x,y,32,32);
+                    gfx.fillStyle(0x208028);
+                    gfx.fillRect(x+4,y+4,6,6);
+                }
+            }
 
-let game;
-let player;
-let camera;
+            // Personagem fixo na tela
+            this.player = this.add.graphics();
+            this.player.x = this.game.config.width/2;
+            this.player.y = this.game.config.height/2;
+            this.drawPlayer = () => {
+                this.player.clear();
+                this.player.fillStyle(0x1e90ff);
+                this.player.fillCircle(0,0,40);
+                this.player.fillStyle(0xffffff);
+                this.player.fillCircle(0,-15,25);
+                this.player.fillStyle(0x000000);
+                this.player.fillRect(-10,-20,8,8);
+                this.player.fillRect(10,-20,8,8);
+            };
+            this.drawPlayer();
 
-function create() {
-    // Mapa
-    const tileGfx = this.add.graphics();
-    for(let x=0; x<60; x++){
-        for(let y=0; y<33; y++){
-            tileGfx.fillStyle(0x28a038);
-            tileGfx.fillRect(x*32, y*32, 32, 32);
+            // Não fecha mais!
+            setInterval(() => this.drawPlayer(), 100);
         }
     }
-
-    // Personagem
-    player = this.add.graphics();
-    player.fillStyle(0x1e90ff);
-    player.fillCircle(960, 540, 40);
-    player.fillStyle(0xffffff);
-    player.fillCircle(960, 540, 25);
-    player.fillStyle(0x000000);
-    player.fillRect(945, 535, 8, 8);
-    player.fillRect(975, 535, 8, 8);
-
-    // Câmera que segue o personagem
-    camera = this.cameras.main;
-    camera.startFollow(player);
-    camera.setBounds(0, 0, 1920, 1080);
-
-    // Botões de ação
-    document.getElementById('btn-left').addEventListener('touchstart', () => player.x -= 10);
-    document.getElementById('btn-right').addEventListener('touchstart', () => player.x += 10);
-    document.getElementById('btn-up').addEventListener('touchstart', () => player.y -= 10);
-    document.getElementById('btn-down').addEventListener('touchstart', () => player.y += 10);
-    document.getElementById('btn-glove').addEventListener('touchstart', () => alert('Ação Luva!'));
-    document.getElementById('btn-item').addEventListener('touchstart', () => alert('Item usado!'));
-}
-
-game = new Phaser.Game(config);
+});
 </script>
-
-<!-- Botões de controle -->
-<div class="ui-btn" id="btn-left"> ← </div>
-<div class="ui-btn" id="btn-right"> → </div>
-<div class="ui-btn" id="btn-up"> ↑ </div>
-<div class="ui-btn" id="btn-down"> ↓ </div>
-<div class="ui-btn" id="btn-glove"> 👊 </div>
-<div class="ui-btn" id="btn-item"> 💎 </div>
-
 </body>
 </html>
